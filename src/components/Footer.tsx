@@ -14,19 +14,20 @@ const Footer = () => {
           
           <div className="flex justify-center gap-6 pt-2">
             <a
-              href="https://web.facebook.com/share/g/1H1LEznScH/"
+              href="https://www.facebook.com/share/g/1H1LEznScH/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-foreground hover:text-primary transition-colors duration-300"
+              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors duration-300"
               aria-label="Visit our Facebook page"
             >
               <Facebook size={24} />
+              <span className="text-sm font-medium">Facebook</span>
             </a>
             <a
               href="https://www.tiktok.com/@kzn.ehailing.coun"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-foreground hover:text-primary transition-colors duration-300"
+              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors duration-300"
               aria-label="Visit our TikTok page"
             >
               <svg
@@ -41,6 +42,7 @@ const Footer = () => {
               >
                 <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
               </svg>
+              <span className="text-sm font-medium">TikTok</span>
             </a>
           </div>
 
