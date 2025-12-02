@@ -4,10 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const MembershipForm = () => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -19,7 +21,7 @@ const MembershipForm = () => {
     registrationNumber: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
@@ -43,23 +45,41 @@ const MembershipForm = () => {
       return;
     }
 
-    // Success toast
-    toast({
-      title: "Application Submitted!",
-      description: "Thank you for joining the KZN E-hailing Council. We'll be in touch soon.",
-    });
+    setIsSubmitting(true);
 
-    // Reset form
-    setFormData({
-      fullName: "",
-      email: "",
-      phone: "",
-      address: "",
-      vehicleMake: "",
-      vehicleModel: "",
-      vehicleYear: "",
-      registrationNumber: ""
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('send-membership-email', {
+        body: formData
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Application Submitted!",
+        description: "Thank you for joining the KZN E-hailing Council. We'll be in touch soon.",
+      });
+
+      // Reset form
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        address: "",
+        vehicleMake: "",
+        vehicleModel: "",
+        vehicleYear: "",
+        registrationNumber: ""
+      });
+    } catch (error: any) {
+      console.error("Error submitting application:", error);
+      toast({
+        title: "Submission Error",
+        description: "There was an error submitting your application. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,6 +126,7 @@ const MembershipForm = () => {
                       value={formData.fullName}
                       onChange={handleChange}
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
 
@@ -120,6 +141,7 @@ const MembershipForm = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -133,6 +155,7 @@ const MembershipForm = () => {
                         value={formData.phone}
                         onChange={handleChange}
                         required
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -145,6 +168,7 @@ const MembershipForm = () => {
                       placeholder="Your residential address"
                       value={formData.address}
                       onChange={handleChange}
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
@@ -161,6 +185,7 @@ const MembershipForm = () => {
                         placeholder="e.g., Toyota"
                         value={formData.vehicleMake}
                         onChange={handleChange}
+                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -172,6 +197,7 @@ const MembershipForm = () => {
                         placeholder="e.g., Corolla"
                         value={formData.vehicleModel}
                         onChange={handleChange}
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -186,6 +212,7 @@ const MembershipForm = () => {
                         placeholder="2020"
                         value={formData.vehicleYear}
                         onChange={handleChange}
+                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -197,13 +224,21 @@ const MembershipForm = () => {
                         placeholder="ABC 123 GP"
                         value={formData.registrationNumber}
                         onChange={handleChange}
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
                 </div>
 
-                <Button type="submit" size="lg" className="w-full">
-                  Submit Application
+                <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit Application"
+                  )}
                 </Button>
               </form>
             </CardContent>
