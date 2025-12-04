@@ -34,7 +34,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notification email to the council
     const adminEmailResponse = await resend.emails.send({
-      from: "KZN E-hailing Council <onboarding@resend.dev>",
+      from: "KZN E-hailing Council <info@ehailingcouncil.org.za>",
       to: ["info@ehailingcouncil.org.za"],
       subject: `New Membership Application: ${data.fullName}`,
       html: `
@@ -61,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send confirmation email to the applicant
     const applicantEmailResponse = await resend.emails.send({
-      from: "KZN E-hailing Council <onboarding@resend.dev>",
+      from: "KZN E-hailing Council <info@ehailingcouncil.org.za>",
       to: [data.email],
       subject: "Your Membership Application Has Been Received",
       html: `
