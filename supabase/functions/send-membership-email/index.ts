@@ -14,6 +14,11 @@ interface MembershipApplicationRequest {
   email: string;
   phone: string;
   address: string;
+  joiningAs: string;
+  groupName?: string;
+  groupLocation?: string;
+  associationName?: string;
+  associationLocation?: string;
   vehicleMake: string;
   vehicleModel: string;
   vehicleYear: string;
@@ -46,6 +51,18 @@ const handler = async (req: Request): Promise<Response> => {
           <li><strong>Phone:</strong> ${data.phone}</li>
           <li><strong>Address:</strong> ${data.address || "Not provided"}</li>
         </ul>
+        <h2>Membership Type</h2>
+        <ul>
+          <li><strong>Joining as:</strong> ${data.joiningAs ? data.joiningAs.charAt(0).toUpperCase() + data.joiningAs.slice(1) : "Not specified"}</li>
+          ${data.joiningAs === "group" ? `
+            <li><strong>Group Name:</strong> ${data.groupName || "Not provided"}</li>
+            <li><strong>Group Location:</strong> ${data.groupLocation || "Not provided"}</li>
+          ` : ""}
+          ${data.joiningAs === "association" ? `
+            <li><strong>Association Name:</strong> ${data.associationName || "Not provided"}</li>
+            <li><strong>Association Location:</strong> ${data.associationLocation || "Not provided"}</li>
+          ` : ""}
+        </ul>
         <h2>Vehicle Information</h2>
         <ul>
           <li><strong>Make:</strong> ${data.vehicleMake || "Not provided"}</li>
@@ -73,6 +90,15 @@ const handler = async (req: Request): Promise<Response> => {
           <li><strong>Name:</strong> ${data.fullName}</li>
           <li><strong>Email:</strong> ${data.email}</li>
           <li><strong>Phone:</strong> ${data.phone}</li>
+          <li><strong>Joining as:</strong> ${data.joiningAs ? data.joiningAs.charAt(0).toUpperCase() + data.joiningAs.slice(1) : "Not specified"}</li>
+          ${data.joiningAs === "group" ? `
+            <li><strong>Group Name:</strong> ${data.groupName || "Not provided"}</li>
+            <li><strong>Group Location:</strong> ${data.groupLocation || "Not provided"}</li>
+          ` : ""}
+          ${data.joiningAs === "association" ? `
+            <li><strong>Association Name:</strong> ${data.associationName || "Not provided"}</li>
+            <li><strong>Association Location:</strong> ${data.associationLocation || "Not provided"}</li>
+          ` : ""}
         </ul>
         <p>If you have any questions, please contact us at <a href="mailto:info@ehailingcouncil.org.za">info@ehailingcouncil.org.za</a></p>
         <p>Best regards,<br>KwaZulu-Natal E-hailing Council</p>
