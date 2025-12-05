@@ -61,6 +61,15 @@ const MembershipForm = () => {
       return;
     }
 
+    if (formData.joiningAs === "individual" && !formData.address) {
+      toast({
+        title: "Error",
+        description: "Please provide your residential address",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (formData.joiningAs === "group" && (!formData.groupName || !formData.groupLocation)) {
       toast({
         title: "Error",
@@ -199,25 +208,10 @@ const MembershipForm = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Input
-                      id="address"
-                      name="address"
-                      placeholder="Your residential address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-
                   <div className="space-y-3 pt-4 border-t border-border">
                     <h3 className="text-lg font-semibold text-foreground">
                       Are you joining as?
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Select whether you are joining as an individual, a group, or an association.
-                    </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="flex items-start space-x-3 rounded-lg border border-border bg-background px-4 py-3">
@@ -239,9 +233,6 @@ const MembershipForm = () => {
                         />
                         <div className="space-y-1">
                           <Label htmlFor="joining-individual">Individual</Label>
-                          <p className="text-xs text-muted-foreground">
-                            You are joining in your personal capacity using your address.
-                          </p>
                         </div>
                       </div>
 
@@ -264,9 +255,6 @@ const MembershipForm = () => {
                         />
                         <div className="space-y-1">
                           <Label htmlFor="joining-group">Group</Label>
-                          <p className="text-xs text-muted-foreground">
-                            You are joining on behalf of a group of operators.
-                          </p>
                         </div>
                       </div>
 
@@ -289,12 +277,23 @@ const MembershipForm = () => {
                         />
                         <div className="space-y-1">
                           <Label htmlFor="joining-association">Association</Label>
-                          <p className="text-xs text-muted-foreground">
-                            You are joining on behalf of a registered association.
-                          </p>
                         </div>
                       </div>
                     </div>
+
+                    {formData.joiningAs === "individual" && (
+                      <div className="space-y-2 pt-3">
+                        <Label htmlFor="address">Your Address *</Label>
+                        <Input
+                          id="address"
+                          name="address"
+                          placeholder="Your residential address"
+                          value={formData.address}
+                          onChange={handleChange}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                    )}
 
                     {formData.joiningAs === "group" && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
