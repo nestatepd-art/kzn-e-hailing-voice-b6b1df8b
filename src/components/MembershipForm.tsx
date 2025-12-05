@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,10 +16,15 @@ const MembershipForm = () => {
     email: "",
     phone: "",
     address: "",
+    joiningAs: "",
+    groupName: "",
+    groupLocation: "",
+    associationName: "",
+    associationLocation: "",
     vehicleMake: "",
     vehicleModel: "",
     vehicleYear: "",
-    registrationNumber: ""
+    registrationNumber: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,6 +51,34 @@ const MembershipForm = () => {
       return;
     }
 
+    // Membership type validation
+    if (!formData.joiningAs) {
+      toast({
+        title: "Error",
+        description: "Please tell us if you are joining as an individual, group, or association",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.joiningAs === "group" && (!formData.groupName || !formData.groupLocation)) {
+      toast({
+        title: "Error",
+        description: "Please provide your group name and location",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.joiningAs === "association" && (!formData.associationName || !formData.associationLocation)) {
+      toast({
+        title: "Error",
+        description: "Please provide your association name and location",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -65,10 +99,15 @@ const MembershipForm = () => {
         email: "",
         phone: "",
         address: "",
+        joiningAs: "",
+        groupName: "",
+        groupLocation: "",
+        associationName: "",
+        associationLocation: "",
         vehicleMake: "",
         vehicleModel: "",
         vehicleYear: "",
-        registrationNumber: ""
+        registrationNumber: "",
       });
     } catch (error: any) {
       console.error("Error submitting application:", error);
@@ -170,6 +209,146 @@ const MembershipForm = () => {
                       onChange={handleChange}
                       disabled={isSubmitting}
                     />
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t border-border">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Are you joining as?
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Select whether you are joining as an individual, a group, or an association.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="flex items-start space-x-3 rounded-lg border border-border bg-background px-4 py-3">
+                        <Checkbox
+                          id="joining-individual"
+                          checked={formData.joiningAs === "individual"}
+                          onCheckedChange={(checked) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              joiningAs: checked === true ? "individual" : "",
+                              groupName: "",
+                              groupLocation: "",
+                              associationName: "",
+                              associationLocation: "",
+                            }))
+                          }
+                          disabled={isSubmitting}
+                          aria-label="Join as an individual"
+                        />
+                        <div className="space-y-1">
+                          <Label htmlFor="joining-individual">Individual</Label>
+                          <p className="text-xs text-muted-foreground">
+                            You are joining in your personal capacity using your address.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start space-x-3 rounded-lg border border-border bg-background px-4 py-3">
+                        <Checkbox
+                          id="joining-group"
+                          checked={formData.joiningAs === "group"}
+                          onCheckedChange={(checked) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              joiningAs: checked === true ? "group" : "",
+                              groupName: checked === true ? prev.groupName : "",
+                              groupLocation: checked === true ? prev.groupLocation : "",
+                              associationName: "",
+                              associationLocation: "",
+                            }))
+                          }
+                          disabled={isSubmitting}
+                          aria-label="Join as a group"
+                        />
+                        <div className="space-y-1">
+                          <Label htmlFor="joining-group">Group</Label>
+                          <p className="text-xs text-muted-foreground">
+                            You are joining on behalf of a group of operators.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start space-x-3 rounded-lg border border-border bg-background px-4 py-3">
+                        <Checkbox
+                          id="joining-association"
+                          checked={formData.joiningAs === "association"}
+                          onCheckedChange={(checked) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              joiningAs: checked === true ? "association" : "",
+                              associationName: checked === true ? prev.associationName : "",
+                              associationLocation: checked === true ? prev.associationLocation : "",
+                              groupName: "",
+                              groupLocation: "",
+                            }))
+                          }
+                          disabled={isSubmitting}
+                          aria-label="Join as an association"
+                        />
+                        <div className="space-y-1">
+                          <Label htmlFor="joining-association">Association</Label>
+                          <p className="text-xs text-muted-foreground">
+                            You are joining on behalf of a registered association.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {formData.joiningAs === "group" && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="groupName">Group Name *</Label>
+                          <Input
+                            id="groupName"
+                            name="groupName"
+                            placeholder="Name of your group"
+                            value={formData.groupName}
+                            onChange={handleChange}
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="groupLocation">Group Location *</Label>
+                          <Input
+                            id="groupLocation"
+                            name="groupLocation"
+                            placeholder="Where your group operates"
+                            value={formData.groupLocation}
+                            onChange={handleChange}
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {formData.joiningAs === "association" && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="associationName">Association Name *</Label>
+                          <Input
+                            id="associationName"
+                            name="associationName"
+                            placeholder="Name of your association"
+                            value={formData.associationName}
+                            onChange={handleChange}
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="associationLocation">Association Location *</Label>
+                          <Input
+                            id="associationLocation"
+                            name="associationLocation"
+                            placeholder="Where your association operates"
+                            value={formData.associationLocation}
+                            onChange={handleChange}
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
