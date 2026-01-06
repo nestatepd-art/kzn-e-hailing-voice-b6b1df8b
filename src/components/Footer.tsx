@@ -14,7 +14,7 @@ const Footer = () => {
           
           <div className="flex justify-center gap-6 pt-2">
             <a
-              href="https://www.facebook.com/share/g/1H1LEznScH/"
+              href="https://www.facebook.com/share/1C4rNmiYWc/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-foreground hover:text-primary transition-colors duration-300"
