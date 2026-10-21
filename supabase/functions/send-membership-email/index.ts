@@ -1,7 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +28,13 @@ interface MembershipApplicationRequest {
   registrationNumber: string;
 }
 
+const trimTo = (value: unknown, max: number): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, max);
+};
+
 const handler = async (req: Request): Promise<Response> => {
   console.log("Received membership application request");
 
@@ -37,80 +47,61 @@ const handler = async (req: Request): Promise<Response> => {
     const data: MembershipApplicationRequest = await req.json();
     console.log("Application data received for:", data.fullName);
 
-    // Send notification email to the council
-    const adminEmailResponse = await resend.emails.send({
-      from: "KZN E-hailing Council <info@ehailingcouncil.org.za>",
-      to: ["info@ehailingcouncil.org.za"],
-      subject: `New Membership Application: ${data.fullName}`,
-      html: `
-        <h1>New Membership Application</h1>
-        <h2>Personal Information</h2>
-        <ul>
-          <li><strong>Full Name:</strong> ${data.fullName}</li>
-          <li><strong>Email:</strong> ${data.email}</li>
-          <li><strong>Phone:</strong> ${data.phone}</li>
-          <li><strong>Address:</strong> ${data.address || "Not provided"}</li>
-        </ul>
-        <h2>Membership Type</h2>
-        <ul>
-          <li><strong>Joining as:</strong> ${data.joiningAs ? data.joiningAs.charAt(0).toUpperCase() + data.joiningAs.slice(1) : "Not specified"}</li>
-          ${data.joiningAs === "group" ? `
-            <li><strong>Group Name:</strong> ${data.groupName || "Not provided"}</li>
-            <li><strong>Group Location:</strong> ${data.groupLocation || "Not provided"}</li>
-          ` : ""}
-          ${data.joiningAs === "association" ? `
-            <li><strong>Association Name:</strong> ${data.associationName || "Not provided"}</li>
-            <li><strong>Association Location:</strong> ${data.associationLocation || "Not provided"}</li>
-          ` : ""}
-        </ul>
-        <h2>Vehicle Information</h2>
-        <ul>
-          <li><strong>Make:</strong> ${data.vehicleMake || "Not provided"}</li>
-          <li><strong>Model:</strong> ${data.vehicleModel || "Not provided"}</li>
-          <li><strong>Year:</strong> ${data.vehicleYear || "Not provided"}</li>
-          <li><strong>Registration:</strong> ${data.registrationNumber || "Not provided"}</li>
-        </ul>
-        <p><em>Submitted on ${new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}</em></p>
-      `,
-    });
+    const fullName = trimTo(data.fullName, 120);
+    const email = trimTo(data.email, 255);
+    const phone = trimTo(data.phone, 40);
+    const joiningAs = trimTo(data.joiningAs, 20);
 
-    console.log("Admin email sent:", adminEmailResponse);
+    if (!fullName || !email || !phone || !joiningAs) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
-    // Send confirmation email to the applicant
-    const applicantEmailResponse = await resend.emails.send({
-      from: "KZN E-hailing Council <info@ehailingcouncil.org.za>",
-      to: [data.email],
-      subject: "Your Membership Application Has Been Received",
-      html: `
-        <h1>Thank You for Your Application, ${data.fullName}!</h1>
-        <p>We have received your membership application for the KwaZulu-Natal E-hailing Council.</p>
-        <p>Our team will review your application and get back to you shortly.</p>
-        <h2>Application Summary</h2>
-        <ul>
-          <li><strong>Name:</strong> ${data.fullName}</li>
-          <li><strong>Email:</strong> ${data.email}</li>
-          <li><strong>Phone:</strong> ${data.phone}</li>
-          <li><strong>Joining as:</strong> ${data.joiningAs ? data.joiningAs.charAt(0).toUpperCase() + data.joiningAs.slice(1) : "Not specified"}</li>
-          ${data.joiningAs === "group" ? `
-            <li><strong>Group Name:</strong> ${data.groupName || "Not provided"}</li>
-            <li><strong>Group Location:</strong> ${data.groupLocation || "Not provided"}</li>
-          ` : ""}
-          ${data.joiningAs === "association" ? `
-            <li><strong>Association Name:</strong> ${data.associationName || "Not provided"}</li>
-            <li><strong>Association Location:</strong> ${data.associationLocation || "Not provided"}</li>
-          ` : ""}
-        </ul>
-        <p>If you have any questions, please contact us at <a href="mailto:info@ehailingcouncil.org.za">info@ehailingcouncil.org.za</a></p>
-        <p>Best regards,<br>KwaZulu-Natal E-hailing Council</p>
-      `,
-    });
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email address" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
-    console.log("Applicant email sent:", applicantEmailResponse);
+    // Email sending is disabled (Resend account cancelled). Store the
+    // application in the database so no submissions are lost; emails
+    // can be re-enabled once the sender domain is verified.
+    const { error: insertError } = await supabase
+      .from("membership_applications")
+      .insert({
+        full_name: fullName,
+        email,
+        phone,
+        address: trimTo(data.address, 300),
+        joining_as: joiningAs,
+        group_name: trimTo(data.groupName, 150),
+        group_location: trimTo(data.groupLocation, 200),
+        association_name: trimTo(data.associationName, 150),
+        association_location: trimTo(data.associationLocation, 200),
+        vehicle_make: trimTo(data.vehicleMake, 60),
+        vehicle_model: trimTo(data.vehicleModel, 60),
+        vehicle_year: trimTo(data.vehicleYear, 10),
+        registration_number: trimTo(data.registrationNumber, 20),
+      });
+
+    if (insertError) {
+      console.error("Failed to store membership application:", insertError);
+      return new Response(
+        JSON.stringify({ error: "Could not save your application. Please try again." }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Application stored for:", fullName);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Application submitted successfully" 
+      JSON.stringify({
+        success: true,
+        message: "Application received. Our team will be in touch soon.",
       }),
       {
         status: 200,
@@ -120,7 +111,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-membership-email function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Something went wrong. Please try again." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
