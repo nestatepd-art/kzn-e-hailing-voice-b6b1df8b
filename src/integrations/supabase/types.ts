@@ -101,6 +101,60 @@ export type Database = {
         }
         Relationships: []
       }
+      membership_applications: {
+        Row: {
+          address: string | null
+          association_location: string | null
+          association_name: string | null
+          created_at: string
+          email: string
+          full_name: string
+          group_location: string | null
+          group_name: string | null
+          id: string
+          joining_as: string
+          phone: string
+          registration_number: string | null
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_year: string | null
+        }
+        Insert: {
+          address?: string | null
+          association_location?: string | null
+          association_name?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          group_location?: string | null
+          group_name?: string | null
+          id?: string
+          joining_as: string
+          phone: string
+          registration_number?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: string | null
+        }
+        Update: {
+          address?: string | null
+          association_location?: string | null
+          association_name?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          group_location?: string | null
+          group_name?: string | null
+          id?: string
+          joining_as?: string
+          phone?: string
+          registration_number?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: string | null
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
